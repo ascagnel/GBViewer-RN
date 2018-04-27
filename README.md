@@ -1,3 +1,12 @@
+## TODO ##
+
+- [ ] Login
+- [ ] Navigate to video details page
+- [ ] Video playback
+- [ ] Make it look not ugly
+- [ ] GB Infinite
+- [ ] Livestream support
+
 ## Everything below is the default React-Native README ##
 This project was bootstrapped with [Create React Native App](https://github.com/react-community/create-react-native-app).
 
