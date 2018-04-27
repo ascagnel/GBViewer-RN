@@ -15,7 +15,7 @@
     "android": "react-native-scripts android",
     "ios": "react-native-scripts ios",
     "test": "jest",
-    "flow": "flow"
+    "flow": "./node_modules/.bin/flow"
   },
   "jest": {
     "preset": "jest-expo"

@@ -2,10 +2,9 @@
 import React, { Component } from 'react';
 import { View, Text, FlatList } from 'react-native';
 
-import get from 'lodash.get';
+import parseVideoListResponse from '../helpers/parseVideoListResponse';
 
 import VideoTile from './VideoTile';
-import type { VideoTileProps } from './VideoTile';
 
 const getVideoPath = apiKey => `https://www.giantbomb.com/api/videos/?api_key=${apiKey}&format=json`;
 
@@ -72,29 +71,13 @@ class MainMenu extends Component<MainMenuProps, MainMenuState> {
             );
         }
 
-        const renderVideos = this.state.videos.map((video) => {
-            const image = get(video, 'image.medium_url');
-            const title = get(video, 'name');
-            const length = get(video, 'length');
-
-            const videoPaths = {
-                hd: get(video, 'hd_url'),
-                high: get(video, 'high_url'),
-                low: get(video, 'low_url')
-            };
-
-            return {
-                image,
-                title,
-                videoPaths,
-            };
-        });
+        const renderVideos = parseVideoListResponse(this.state.videos);
 
         return (
             <FlatList
                 data={renderVideos}
                 renderItem={({ item }) => (
-                    <VideoTile {...item} />
+                    <VideoTile {...item} apiKey={this.props.apiKey} />
                 )}
                 keyExtractor={(item, index) => `video-list-${index}`}
             />
