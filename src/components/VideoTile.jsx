@@ -1,6 +1,7 @@
 //@flow
 import React, { Component } from 'react';
-import { View, Text, Image, StyleSheet, ProgressViewIOS } from 'react-native';
+import { View, Text, Image, StyleSheet, ProgressViewIOS, TouchableHighlight } from 'react-native';
+import { Video } from 'expo';
 
 import type { VideoType } from '../helpers/parseVideoListResponse';
 
@@ -9,12 +10,12 @@ type VideoTileProps = VideoType & {
 };
 
 type VideoTileState = {
+    isPlaying: boolean,
     videoProgress: 0
 };
 
 const styles = StyleSheet.create({
-    image: {
-        resizeMode: 'cover',
+    video: {
         width: "100%",
         height: 212
     }
@@ -25,16 +26,26 @@ class VideoTile extends Component<VideoTileProps, VideoTileState> {
         super(props);
 
         this.state = {
+            isPlaying: false,
             videoProgress: 0
         }
 
         this.loadProgress = this.loadProgress.bind(this);
+        this.startPlayback = this.startPlayback.bind(this);
+        this.savePlaybackStatus = this.savePlaybackStatus.bind(this);
     }
     
     loadProgress: () => void;
+    startPlayback: () => void;
+    savePlaybackStatus: (any) => void;
+    player: any;
 
     componentDidMount() {
         this.loadProgress();
+    }
+
+    startPlayback() {
+        this.setState({ isPlaying: true });
     }
 
     async loadProgress() {
@@ -63,19 +74,40 @@ class VideoTile extends Component<VideoTileProps, VideoTileState> {
         }
     }
 
+    savePlaybackStatus(playbackStatus: any) {
+        if (playbackStatus.positionMillis) {
+            fetch(`http://www.giantbomb.com/api/video/save-time/?video_id=${this.props.serviceId}&time_to_save=${playbackStatus.positionMillis/1000}&api_key=${this.props.apiKey}`);
+        }
+    }
+
     render() {
         let videoProgress = null;
 
         if (this.state.videoProgress) {
             const progressPercentage = this.state.videoProgress / parseInt(this.props.length);
-            videoProgress = <ProgressViewIOS progress={progressPercentage} progressTintColor="red" />
+            videoProgress = <ProgressViewIOS progress={progressPercentage} progressTintColor="red" />;
         }
 
         return (
             <View>
-                <Image source={{ uri: this.props.image }} style={styles.image} />
-                {videoProgress}
-                <Text>{this.props.title}</Text>
+                <TouchableHighlight onPress={this.startPlayback}>
+                    <View>
+                        <Video
+                            source={{ uri: `${this.props.video}?api_key=${this.props.apiKey}` }}
+                            posterSource={{ uri: this.props.image }}
+                            resizeMode="cover"
+                            ref={ref => { this.player = ref; }}
+                            style={styles.video}
+                            shouldPlay={this.state.isPlaying}
+                            usePoster
+                            useNativeControls
+                            progressUpdateIntervalMillis={5000}
+                            onPlaybackStatusUpdate={this.savePlaybackStatus}
+                        />
+                        {videoProgress}
+                        <Text>{this.props.title}</Text>
+                    </View>
+                </TouchableHighlight>
             </View>
         );
     }
