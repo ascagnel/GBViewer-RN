@@ -1,6 +1,6 @@
 //@flow
 import React, { Component } from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, RefreshControl, ActivityIndicator, StatusBar, StyleSheet, Platform, SafeAreaView } from 'react-native';
 
 import parseVideoListResponse from '../helpers/parseVideoListResponse';
 
@@ -15,8 +15,15 @@ type MainMenuProps = {
 type MainMenuState = {
     videos: Array<any>,
     isLoading: boolean,
+    hasLoaded: boolean,
     hasLoadingError: boolean,
 };
+
+const styles = StyleSheet.create({
+    appBar: {
+        height: Platform.OS === 'ios' ? 44 : 56
+    }
+});
 
 class MainMenu extends Component<MainMenuProps, MainMenuState> {
     constructor(props: MainMenuProps) {
@@ -24,6 +31,7 @@ class MainMenu extends Component<MainMenuProps, MainMenuState> {
 
         this.state = {
             videos: [],
+            hasLoaded: false,
             hasLoadingError: false,
             isLoading: true,
         };
@@ -37,28 +45,29 @@ class MainMenu extends Component<MainMenuProps, MainMenuState> {
     }
 
     async loadVideos() {
+        this.setState({ isLoading: true });
         let result = null;
         try {
             result = await fetch(getVideoPath(this.props.apiKey));
         } catch (e) {
             console.log('error occurred', e.message);
-            this.setState({ hasLoadingError: true, isLoading: false });
+            this.setState({ hasLoadingError: true, isLoading: false, hasLoaded: true });
             return;
         }
 
         if (result.ok) {
             const { results: videos } = await result.json();
-            this.setState({ videos, isLoading: false });
+            this.setState({ videos, isLoading: false, hasLoaded: true });
         } else {
-            this.setState({ hasLoadingError: true, isLoading: false });
+            this.setState({ hasLoadingError: true, isLoading: false, hasLoaded: true });
         }
     }
 
     render() {
-        if (this.state.isLoading) {
+        if (!this.state.hasLoaded) {
             return (
                 <View>
-                    <Text>Loading...</Text>
+                    <ActivityIndicator />
                 </View>
             );
         }
@@ -74,13 +83,24 @@ class MainMenu extends Component<MainMenuProps, MainMenuState> {
         const renderVideos = parseVideoListResponse(this.state.videos);
 
         return (
-            <FlatList
-                data={renderVideos}
-                renderItem={({ item }) => (
-                    <VideoTile {...item} apiKey={this.props.apiKey} />
-                )}
-                keyExtractor={(item, index) => `video-list-${index}`}
-            />
+            <SafeAreaView>
+                <View style={styles.appBar}>
+                    <Text>GB Viewer-RN</Text>
+                </View>
+                <FlatList
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={this.state.isLoading}
+                            onRefresh={this.loadVideos}
+                        />
+                    }
+                    data={renderVideos}
+                    renderItem={({ item }) => (
+                        <VideoTile {...item} apiKey={this.props.apiKey} />
+                    )}
+                    keyExtractor={(item, index) => `video-list-${index}`}
+                />
+            </SafeAreaView>
         )
     }
 }

@@ -1,6 +1,6 @@
 //@flow
 import React, { Component } from 'react';
-import { View, Text, Image, StyleSheet, ProgressViewIOS, TouchableHighlight } from 'react-native';
+import { View, Text, Image, StyleSheet, ProgressViewIOS, TouchableWithoutFeedback } from 'react-native';
 import { Video } from 'expo';
 
 import type { VideoType } from '../helpers/parseVideoListResponse';
@@ -45,6 +45,11 @@ class VideoTile extends Component<VideoTileProps, VideoTileState> {
     }
 
     startPlayback() {
+        if (!this.state.isPlaying && this.player && this.state.videoProgress) {
+            console.log('has player');
+            this.player.setPositionAsync(this.state.videoProgress * 1000, { toleranceMillisBefore: 5000, toleranceMillisAfter: 5000 });
+        }
+
         this.setState({ isPlaying: true });
     }
 
@@ -90,12 +95,12 @@ class VideoTile extends Component<VideoTileProps, VideoTileState> {
 
         return (
             <View>
-                <TouchableHighlight onPress={this.startPlayback}>
+                <TouchableWithoutFeedback onPress={this.startPlayback}>
                     <View>
                         <Video
                             source={{ uri: `${this.props.video}?api_key=${this.props.apiKey}` }}
                             posterSource={{ uri: this.props.image }}
-                            resizeMode="cover"
+                            resizeMode="contain"
                             ref={ref => { this.player = ref; }}
                             style={styles.video}
                             shouldPlay={this.state.isPlaying}
@@ -107,7 +112,7 @@ class VideoTile extends Component<VideoTileProps, VideoTileState> {
                         {videoProgress}
                         <Text>{this.props.title}</Text>
                     </View>
-                </TouchableHighlight>
+                </TouchableWithoutFeedback>
             </View>
         );
     }
