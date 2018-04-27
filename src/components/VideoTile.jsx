@@ -64,13 +64,17 @@ class VideoTile extends Component<VideoTileProps, VideoTileState> {
     }
 
     render() {
+        let videoProgress = null;
+
         if (this.state.videoProgress) {
-            console.log(`${this.props.serviceId} - ${this.state.videoProgress}`);
+            const progressPercentage = this.state.videoProgress / parseInt(this.props.length);
+            videoProgress = <ProgressViewIOS progress={progressPercentage} progressTintColor="red" />
         }
+
         return (
             <View>
                 <Image source={{ uri: this.props.image }} style={styles.image} />
-                {this.state.videoProgress && <ProgressViewIOS progress={this.state.videoProgress / parseInt(this.props.length)} progressTintColor="red" />}
+                {videoProgress}
                 <Text>{this.props.title}</Text>
             </View>
         );
